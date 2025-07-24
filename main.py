@@ -116,7 +116,7 @@ def main():
         return
 
     try:
-        zip_url = "https://www.dropbox.com/scl/fi/6brskgm6j014jkzjw5jjl/boiii.zip?rlkey=3gn18pdgbhmh1qyyyykfrc5pg&st=7baajqd9&dl=1"
+        zip_url = "https://www.dropbox.com/scl/fi/432jt0d43y3zo7pn0txbb/boiii.zip?rlkey=j1zrcst5hykcl43l26axf82f2&st=qiqpsl3h&dl=1"
         tmp_zip_path = os.path.join(tempfile.gettempdir(), "boiii.zip")
         download_file(zip_url, tmp_zip_path, log_path)
         extract_zip(tmp_zip_path, local_appdata_dir, log_path)
