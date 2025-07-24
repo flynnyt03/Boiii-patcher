@@ -7,6 +7,8 @@ import datetime
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 import json
+import pythoncom
+import win32com.client
 
 def log(message, log_path):
     timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -42,7 +44,6 @@ def prompt_for_username():
 def create_properties_file(bo3_folder, player_name, log_path):
     players_dir = os.path.join(bo3_folder, "boiii_players")
     os.makedirs(players_dir, exist_ok=True)
-
     properties_path = os.path.join(players_dir, "properties.json")
     if not os.path.exists(properties_path):
         log(f"Creating {properties_path} with player name: {player_name}", log_path)
@@ -50,6 +51,27 @@ def create_properties_file(bo3_folder, player_name, log_path):
             json.dump({"playerName": player_name}, f)
     else:
         log("properties.json already exists. Not modifying.", log_path)
+
+def create_desktop_shortcut(target_path, shortcut_name, description=""):
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    shortcut_path = os.path.join(desktop, f"{shortcut_name}.lnk")
+    shell = win32com.client.Dispatch("WScript.Shell")
+    shortcut = shell.CreateShortcut(shortcut_path)
+    shortcut.TargetPath = target_path
+    shortcut.WorkingDirectory = os.path.dirname(target_path)
+    shortcut.Description = description
+    shortcut.IconLocation = target_path
+    shortcut.save()
+
+def ask_create_shortcut(boiii_exe_path):
+    root = tk.Tk()
+    root.withdraw()
+    result = messagebox.askyesno("Create Shortcut", "Do you want to create a desktop shortcut for Ezz BOIII?")
+    root.destroy()
+    if result:
+        create_desktop_shortcut(boiii_exe_path, "Ezz BOIII", "Shortcut to Ezz BOIII executable")
+        return True
+    return False
 
 def wait_for_exit():
     window = tk.Tk()
@@ -73,7 +95,6 @@ def main():
         log("No folder selected. Exiting.", log_path)
         return
 
-    # Download boiii.exe
     boiii_exe_url = "https://github.com/Ezz-lol/boiii-free/releases/download/v1.0.7/boiii.exe"
     boiii_exe_path = os.path.join(bo3_folder, "boiii.exe")
     try:
@@ -82,7 +103,6 @@ def main():
         log(f"Error downloading boiii.exe: {e}", log_path)
         return
 
-    # Download and extract zip to Local folder
     try:
         zip_url = "https://www.dropbox.com/scl/fi/6brskgm6j014jkzjw5jjl/boiii.zip?rlkey=3gn18pdgbhmh1qyyyykfrc5pg&st=7baajqd9&dl=1"
         tmp_zip_path = os.path.join(tempfile.gettempdir(), "boiii.zip")
@@ -91,12 +111,16 @@ def main():
     except Exception as e:
         log(f"Error handling zip: {e}", log_path)
 
-    # Prompt for in-game player name
     player_name = prompt_for_username()
     if player_name:
         create_properties_file(bo3_folder, player_name, log_path)
     else:
         log("No player name entered. Skipping properties.json creation.", log_path)
+
+    if ask_create_shortcut(boiii_exe_path):
+        log("Desktop shortcut created.", log_path)
+    else:
+        log("User declined desktop shortcut creation.", log_path)
 
     log("Installation complete. Waiting for user to close the window...", log_path)
     wait_for_exit()
