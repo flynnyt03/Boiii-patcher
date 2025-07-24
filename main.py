@@ -73,6 +73,16 @@ def ask_create_shortcut(boiii_exe_path):
         return True
     return False
 
+def download_batch_file(destination_folder, log_path):
+    batch_url = "https://raw.githubusercontent.com/flynnyt03/Boiii-patcher/main/change_name.bat"
+    batch_path = os.path.join(destination_folder, "change_name.bat")
+    try:
+        log(f"Downloading change_name.bat to {batch_path}...", log_path)
+        urllib.request.urlretrieve(batch_url, batch_path)
+        log("change_name.bat downloaded successfully.", log_path)
+    except Exception as e:
+        log(f"Error downloading change_name.bat: {e}", log_path)
+
 def wait_for_exit():
     window = tk.Tk()
     window.title("boiii Installer")
@@ -97,10 +107,12 @@ def main():
 
     boiii_exe_url = "https://github.com/Ezz-lol/boiii-free/releases/download/v1.0.7/boiii.exe"
     boiii_exe_path = os.path.join(bo3_folder, "boiii.exe")
+
     try:
         download_file(boiii_exe_url, boiii_exe_path, log_path)
+        download_batch_file(bo3_folder, log_path)
     except Exception as e:
-        log(f"Error downloading boiii.exe: {e}", log_path)
+        log(f"Error downloading boiii.exe or batch file: {e}", log_path)
         return
 
     try:
