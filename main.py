@@ -5,6 +5,8 @@ import tempfile
 import getpass
 import datetime
 import tkinter as tk
+from tkinter import filedialog, simpledialog, messagebox
+import json
 
 def log(message, log_path):
     timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -12,6 +14,42 @@ def log(message, log_path):
     print(full_message)
     with open(log_path, "a") as log_file:
         log_file.write(full_message + "\n")
+
+def ask_bo3_directory():
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showinfo("Select Folder", "Please select your Call of Duty Black Ops 3 installation folder.")
+    folder_selected = filedialog.askdirectory(title="Select BO3 Folder")
+    return folder_selected
+
+def download_file(url, destination, log_path):
+    log(f"Downloading {url} to {destination}...", log_path)
+    urllib.request.urlretrieve(url, destination)
+    log("Download complete.", log_path)
+
+def extract_zip(zip_path, target_dir, log_path):
+    log(f"Extracting {zip_path} to {target_dir}...", log_path)
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(target_dir)
+    log("Extraction complete.", log_path)
+
+def prompt_for_username():
+    root = tk.Tk()
+    root.withdraw()
+    username = simpledialog.askstring("Player Name", "Enter your in-game player name:")
+    return username.strip() if username else None
+
+def create_properties_file(bo3_folder, player_name, log_path):
+    players_dir = os.path.join(bo3_folder, "boiii_players")
+    os.makedirs(players_dir, exist_ok=True)
+
+    properties_path = os.path.join(players_dir, "properties.json")
+    if not os.path.exists(properties_path):
+        log(f"Creating {properties_path} with player name: {player_name}", log_path)
+        with open(properties_path, "w") as f:
+            json.dump({"playerName": player_name}, f)
+    else:
+        log("properties.json already exists. Not modifying.", log_path)
 
 def wait_for_exit():
     window = tk.Tk()
@@ -24,28 +62,41 @@ def wait_for_exit():
     window.mainloop()
 
 def main():
-    url = 'https://www.dropbox.com/scl/fi/6brskgm6j014jkzjw5jjl/boiii.zip?rlkey=3gn18pdgbhmh1qyyyykfrc5pg&st=7baajqd9&dl=1'  
-
     user_name = getpass.getuser()
-    target_dir = os.path.join("C:\\Users", user_name, "AppData", "Local")
-    os.makedirs(target_dir, exist_ok=True)
+    local_appdata_dir = os.path.join("C:\\Users", user_name, "AppData", "Local")
+    os.makedirs(local_appdata_dir, exist_ok=True)
+    log_path = os.path.join(local_appdata_dir, "installer.log")
+    log("Starting installer...", log_path)
 
-    log_path = os.path.join(target_dir, "installer.log")
-    log("Starting installation...", log_path)
+    bo3_folder = ask_bo3_directory()
+    if not bo3_folder or not os.path.isdir(bo3_folder):
+        log("No folder selected. Exiting.", log_path)
+        return
 
+    # Download boiii.exe
+    boiii_exe_url = "https://github.com/Ezz-lol/boiii-free/releases/download/v1.0.7/boiii.exe"
+    boiii_exe_path = os.path.join(bo3_folder, "boiii.exe")
     try:
-        tmp_zip_path = os.path.join(tempfile.gettempdir(), "boiii.zip")
-        log(f"Downloading file from {url}...", log_path)
-        urllib.request.urlretrieve(url, tmp_zip_path)
-        log("Download complete.", log_path)
-
-        log(f"Extracting to {target_dir}...", log_path)
-        with zipfile.ZipFile(tmp_zip_path, 'r') as zip_ref:
-            zip_ref.extractall(target_dir)
-        log("Extraction complete.", log_path)
-
+        download_file(boiii_exe_url, boiii_exe_path, log_path)
     except Exception as e:
-        log(f"Error: {str(e)}", log_path)
+        log(f"Error downloading boiii.exe: {e}", log_path)
+        return
+
+    # Download and extract zip to Local folder
+    try:
+        zip_url = "https://www.dropbox.com/scl/fi/6brskgm6j014jkzjw5jjl/boiii.zip?rlkey=3gn18pdgbhmh1qyyyykfrc5pg&st=7baajqd9&dl=1"
+        tmp_zip_path = os.path.join(tempfile.gettempdir(), "boiii.zip")
+        download_file(zip_url, tmp_zip_path, log_path)
+        extract_zip(tmp_zip_path, local_appdata_dir, log_path)
+    except Exception as e:
+        log(f"Error handling zip: {e}", log_path)
+
+    # Prompt for in-game player name
+    player_name = prompt_for_username()
+    if player_name:
+        create_properties_file(bo3_folder, player_name, log_path)
+    else:
+        log("No player name entered. Skipping properties.json creation.", log_path)
 
     log("Installation complete. Waiting for user to close the window...", log_path)
     wait_for_exit()

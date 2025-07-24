@@ -1,2 +1,2 @@
-pyinstaller --onefile main.py
-Pause
+pyinstaller --onefile --clean --icon=icon.ico main.py
+pause
