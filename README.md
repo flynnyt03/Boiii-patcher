@@ -15,5 +15,17 @@ While installing EZZ BOIII, my friends and I ran into an issue that hasn’t bee
 - 🖼️ **Custom Icon Support**: Now includes a custom icon for the `.exe` installer.
 
 ---
+v3 – 24/07/2025
+
+✨ New Feature: Added automatic download of change_name.bat from GitHub into the BO3 game folder.
+
+🧑‍💻 change_name.bat: Simple batch script that allows users to update their in-game username by modifying boiii_players/properties.json.
+
+🛠️ Improved Logging: All major events, including the .bat download, are now logged to installer.log for easier troubleshooting.
+
+🧼 Cleanup: Better error handling during file downloads and extraction processes.
+
+📌 Reminder: This installer does not include any T7 game files.
+---
 
 Just run the installer, follow the prompts, and you’re ready to play — no manual setup needed.
